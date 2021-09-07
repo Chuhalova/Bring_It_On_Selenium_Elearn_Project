@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="Selenium_elearn_project" />
+        <module name="Bring_It_On_Selenium_Elearn_Project" />
       </profile>
     </annotationProcessing>
   </component>

@@ -1,59 +1,41 @@
 package pageobject_model.test;
 
-import org.openqa.selenium.WebDriver;
+import model.Paste;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import pageobject_model.pageobject.PastePage;
 import pageobject_model.pageobject.PastebinHomePage;
+import service.PasteService;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 
-public class WebDriverPastebinTest {
-
-    public static final String CODE_TEXT = "Hello from WebDriver";
-
-    public static final String TITLE = "helloweb";
-
-    public static final String EXP_TIME = "10 min";
-
-    private WebDriver driver;
-
-    @BeforeMethod(alwaysRun = true)
-    public void browserSetup() {
-        System.setProperty("webdriver.chrome.driver", "/Users/Veronika_Chukhalova/Downloads/drivers/chromedriver");
-        driver = new ChromeDriver();
-        driver.get("https://pastebin.com");
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void browserTearDown() {
-        driver.quit();
-        driver = null;
-    }
+public class WebDriverPastebinTest extends CommonConditions {
 
     @Test
-    public void commonSearchTestResultsNotEmpty() {
+    public void commonSearchTestResultsNotEmpty() throws InterruptedException {
+        Paste paste = new PasteService().createPasteWithExpiration10Min();
+        String expirationTime = paste.getExpirationTime()+" min";
+        String pasteTitle = paste.getTitle();
+        String pasteCode = paste.getCode();
         PastebinHomePage pastebinHomePage = new PastebinHomePage(driver);
-        WebElement expirationUL = pastebinHomePage.enterCodeToCodeArea(CODE_TEXT)
-                                    .openExpirationBlock()
-                                    .getExpirationUl();
+        WebElement privacyPopup = pastebinHomePage.openPage()
+                                                  .getPrivacyPopup();
+        pastebinHomePage.waitForVisibilityOfElement(privacyPopup);
+        pastebinHomePage.clickOnAgreeBtn();
+        WebElement expirationUL = pastebinHomePage.enterCodeToCodeArea(pasteCode)
+                                                  .openExpirationBlock()
+                                                  .getExpirationUl();
         pastebinHomePage.waitForVisibilityOfElement(expirationUL);
         pastebinHomePage.selectTenMinExpiration()
-                                    .enterTitle(TITLE)
-                                    .clickOnSubmitBtn();
+                        .enterTitle(pasteTitle)
+                        .clickOnSubmitBtn();
         PastePage pastePage = new PastePage(driver);
         WebElement newPastesTitleElement = pastePage.getNewPastesTitleElement();
         pastePage.waitForVisibilityOfElement(newPastesTitleElement);
-        assertEquals(pastePage.getNewPastesTitle(), TITLE,
-                     "Current title isn't the same as entered on previous step.");
-        assertEquals(pastePage.getNewPastesCodeText(), CODE_TEXT,
+        assertEquals(pastePage.getNewPastesTitle(), pasteTitle, "Current title isn't the same as entered on previous step.");
+        assertEquals(pastePage.getNewPastesCodeText(), pasteCode,
                      "Current code text isn't the same as entered on previous step.");
-        assertEquals(pastePage.getNewExpireTime(), EXP_TIME,
+        assertEquals(pastePage.getNewExpireTime(), expirationTime,
                      "Current expiration time isn't the same as selected on previous step.");
     }
 }
